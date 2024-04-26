@@ -1,6 +1,7 @@
-using KroneckerProductKernels
-using Test
+using KroneckerProductKernels, KernelFunctions
+using Test, Random
+using KernelFunctions: TestUtils
 
 @testset "KroneckerProductKernels.jl" begin
-    # Write your tests here.
+    include("test_kernel.jl")
 end
