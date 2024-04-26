@@ -37,11 +37,9 @@
     # To compute the kernelmatrix correctly, the first dimension must be paired
     # with each of the second dimension values. The second dimension must have
     # a fixed set of values. eg. [t1, λ1], ...,[t1, λn], [t2, λ1], ..., [t2, λn]
-    x0s = collect(0.0:1:5); x1s = x0s .+ 5; x2s = collect(0.0:1:6)
-    y0s = collect(1.0:1:5); y1s = y0s .+ 3; y2s = collect(1.0:1:6)
-    X0 = vcat([[x y] for x in x0s for y in y0s]...)
-    X1 = vcat([[x y] for x in x1s for y in y1s]...)
-    X2 = vcat([[x y] for x in x2s for y in y2s]...)
+    X0 = make_test_inputs(5,4)
+    X1 = make_test_inputs(5,4,seed=12345)
+    X2 = make_test_inputs(6, 4)
 
     # Check that Kronecker and tensor kernel matrices match (not exactly, since
     # using distinct algorithms)
