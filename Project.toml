@@ -3,11 +3,9 @@ uuid = "cdbd8a54-2c11-4475-85dd-323d022ca3c3"
 authors = ["Zach Langford <langfzac@sas.upenn.edu> and contributors"]
 version = "0.0.1"
 
+[deps]
+KernelFunctions = "ec8451be-7e33-11e9-00cf-bbf324bd1392"
+Kronecker = "2c470bb0-bcc8-11e8-3dad-c9649493f05e"
+
 [compat]
 julia = "1.6.7"
-
-[extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-
-[targets]
-test = ["Test"]

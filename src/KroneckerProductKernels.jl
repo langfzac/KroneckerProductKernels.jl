@@ -1,8 +1,6 @@
 module KroneckerProductKernels
 
-using AbstractGPs, KernelFunctions, Kronecker
-using Distributions
-using LinearAlgebra
+using KernelFunctions, Kronecker
 using Kronecker: ⊗
 
 export KernelKroneckerProduct
