@@ -1,4 +1,4 @@
-using KroneckerProductKernels, KernelFunctions
+using KroneckerProductKernels, KernelFunctions, AbstractGPs, BenchmarkTools
 using Test, Random
 using KernelFunctions: TestUtils
 
@@ -12,4 +12,5 @@ end
 
 @testset "KroneckerProductKernels.jl" begin
     include("test_kernel.jl")
+    include("test_gp.jl")
 end
