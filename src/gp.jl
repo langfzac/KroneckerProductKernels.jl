@@ -17,7 +17,7 @@ function Random.rand(rng::AbstractRNG, f::UniformVarKroneckerFiniteGP, N::Int)
     E = eigen(K); λs = E.values; U = E.vectors
     Λ = Diagonal(λs) + f.Σy
     Λ12z = sqrt(Λ) * randn(rng, promote_type(eltype(m), eltype(Λ)), length(m), N)
-    return m + (U * Λ12z)
+    return m .+ (U * Λ12z)
 end
 
 # Case Σ is diagonal (can be slooooooow)
@@ -26,7 +26,7 @@ function Random.rand(rng::AbstractRNG, f::DiagonalVarKroneckerFiniteGP, N::Int)
     K = kernelmatrix(f.f.kernel, f.x)
     E = eigen(K); Q = E.vectors; Λ1 = Diagonal(E.values)
     Λ = Λ1 + transpose(Q)*f.Σy*Q
-    return m + Q*sqrt(Λ)*randn(rng, promote_type(eltype(m), eltype(Λ)), length(m), N)
+    return m .+ Q*sqrt(Λ)*randn(rng, promote_type(eltype(m), eltype(Λ)), length(m), N)
 end
 
 Random.rand(f::KroneckerFiniteGP, N::Int) = rand(Random.GLOBAL_RNG, f, N)
