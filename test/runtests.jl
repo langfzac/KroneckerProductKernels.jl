@@ -1,4 +1,4 @@
-using AbstractGPs, KernelFunctions, KroneckerProductKernels, Kronecker
+using AbstractGPs, KernelFunctions, KroneckerProductKernels, Kronecker, Distributions
 using Test, BenchmarkTools, Random
 using KernelFunctions: TestUtils
 using KroneckerProductKernels: make_test_inputs

@@ -1,4 +1,20 @@
 @testset "GP" begin
+    # Redo some tests from AbstractGPs
+    @testset "convert" begin
+        N,M = 10, 5
+        X = make_test_inputs(N, M)
+        covariances = (0.1, Diagonal(rand(N)) ⊗ Diagonal(rand(M)))
+        for covar in covariances
+            fx = GP(KernelKroneckerProduct(SqExponentialKernel(), SqExponentialKernel()))(RowVecs(X), covar)
+            @test fx isa AbstractGPs.FiniteGP
+            
+            dist = @inferred(convert(MvNormal, fx))
+            @test dist isa MvNormal{Float64}
+            @test mean(dist) ≈ mean(fx)
+            @test cov(dist) ≈ cov(fx)
+        end
+    end
+
     @testset "logpdf" begin
         # Test the logpdfs for a few combinations of kernels
         # Again, the computations for the tensor product kernel should match
