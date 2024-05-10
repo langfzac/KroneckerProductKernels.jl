@@ -26,7 +26,7 @@ function Random.rand(rng::AbstractRNG, f::DiagonalVarKroneckerFiniteGP, N::Int)
     K = kernelmatrix(f.f.kernel, f.x)
     E = eigen(K); Q = E.vectors; Λ1 = Diagonal(E.values)
     Λ = Λ1 + transpose(Q)*f.Σy*Q
-    return m .+ Q*sqrt(Λ)*randn(rng, promote_type(eltype(m), eltype(Λ)), length(m), N)
+    return m .+ Q*real(sqrt(Λ))*randn(rng, promote_type(eltype(m), eltype(Λ)), length(m), N)
 end
 
 Random.rand(f::KroneckerFiniteGP, N::Int) = rand(Random.GLOBAL_RNG, f, N)
