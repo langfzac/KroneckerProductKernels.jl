@@ -1,6 +1,10 @@
-using KroneckerProductKernels
-using Test
+using AbstractGPs, KernelFunctions, KroneckerProductKernels, Kronecker, Distributions
+using Test, BenchmarkTools, Random
+using KernelFunctions: TestUtils
+using KroneckerProductKernels: make_test_inputs
+using Kronecker: ⊗, Diagonal
 
 @testset "KroneckerProductKernels.jl" begin
-    # Write your tests here.
+    include("test_kernel.jl")
+    include("test_gp.jl")
 end
