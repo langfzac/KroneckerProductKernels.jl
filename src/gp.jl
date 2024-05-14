@@ -1,5 +1,5 @@
 # Make a "fake" AbstractGP type
-const KroneckerProductGP = GP{<:MeanFunction, <:KernelKroneckerProduct}
+const KroneckerProductGP = GP{<:MeanFunction, <:Union{KernelKroneckerProduct, ScaledKernel{<:KernelKroneckerProduct}}}
 
 # FiniteGP types 
 const KroneckerFiniteGP = FiniteGP{<:KroneckerProductGP}
