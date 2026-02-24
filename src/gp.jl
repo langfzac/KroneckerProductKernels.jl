@@ -33,13 +33,17 @@ Random.rand(f::KroneckerFiniteGP, N::Int) = rand(Random.GLOBAL_RNG, f, N)
 Random.rand(rng::AbstractRNG, f::KroneckerFiniteGP) = vec(rand(rng, f, 1))
 Random.rand(f::KroneckerFiniteGP) = vec(rand(f, 1))
 
+function Distributions.logpdf(f::KroneckerFiniteGP, Y::AbstractVecOrMat{<:Real})
+    K = kernelmatrix(f.f.kernel, f.x)
+    return _logpdf(f, Y, K)
+end
+
 # Following Fortune et al. 2024
 # This one assumes uniform input variance -> f.Σy == σ²I
-function Distributions.logpdf(f::UniformVarKroneckerFiniteGP, Y::AbstractVecOrMat{<:Real})
+function _logpdf(f::UniformVarKroneckerFiniteGP, Y::AbstractVecOrMat{<:Real}, K)
     NM = size(Y,1)
 
     # Get the kronecker product matrix and compute the eigen decomposition of the components
-    K = kernelmatrix(f.f.kernel, f.x)
     E1 = eigen(Symmetric(K.A)); Q1 = E1.vectors; Λ1 = Diagonal(E1.values)
     E2 = eigen(Symmetric(K.B)); Q2 = E2.vectors; Λ2 = Diagonal(E2.values)
 
@@ -58,11 +62,8 @@ function Distributions.logpdf(f::UniformVarKroneckerFiniteGP, Y::AbstractVecOrMa
 end
 
 # Now for Σ is diagonal
-function Distributions.logpdf(f::DiagonalVarKroneckerFiniteGP, Y::AbstractVecOrMat{<:Real})
+function _logpdf(f::DiagonalVarKroneckerFiniteGP, Y::AbstractVecOrMat{<:Real}, K)
     NM = size(Y, 1)
-
-    # Get kernel matrix
-    K = kernelmatrix(f.f.kernel, f.x)
 
     # Get input covariance components
     Σ1 = f.Σy.A; Σ1m = inv(sqrt(Σ1))
