@@ -1,7 +1,7 @@
 name = "KroneckerProductKernels"
 uuid = "cdbd8a54-2c11-4475-85dd-323d022ca3c3"
-authors = ["Zach Langford <langfzac@sas.upenn.edu> and contributors"]
 version = "0.0.2"
+authors = ["Zach Langford <langfzac@sas.upenn.edu> and contributors"]
 
 [deps]
 AbstractGPs = "99985d1d-32ba-4be9-9821-2ec096f28918"
@@ -10,6 +10,12 @@ KernelFunctions = "ec8451be-7e33-11e9-00cf-bbf324bd1392"
 Kronecker = "2c470bb0-bcc8-11e8-3dad-c9649493f05e"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+
+[weakdeps]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+
+[extensions]
+KroneckerProductKernelsForwardDiffExt = "ForwardDiff"
 
 [compat]
 AbstractGPs = "0.5"
