@@ -62,6 +62,7 @@
     @testset "logpdf" begin
         # Test the logpdfs for a few combinations of kernels
         # Again, the computations for the tensor product kernel should match
+        rng = Random.MersenneTwister(1234)
         N, M = 100, 5
         X = make_test_inputs(N,M)
         kernels = (ExponentialKernel(), SqExponentialKernel(), Matern52Kernel(), WhiteKernel())
@@ -88,6 +89,41 @@
                     # Check type stability
                     @test @inferred(logpdf(fx_kron, Y)) isa Float64
                     @test @inferred(logpdf(fx_kron_scaled, Y)) isa Float64
+
+                    # Now test ForwardDiff (WhiteKernel is unstable)
+                    if (covariance isa Number) && (k1 != WhiteKernel()) && (k2 != WhiteKernel())
+                        function compute_logpdf(θ)
+                            h2, l1, l2, σ2 = θ
+                            k1_t = h2 * (k1 ∘ ScaleTransform(1 / l1))
+                            k2_t = (k2 ∘ ScaleTransform(1 / l2))
+                            fx = GP(KernelKroneckerProduct(k1_t, k2_t))(RowVecs(X), σ2)
+                            return logpdf(fx, Y)
+                        end
+
+                        for _ in 1:5
+                            θ = [
+                                rand(rng, Uniform(0.1, 5.0)),
+                                rand(rng, Uniform(1.0, 10.0)),
+                                rand(rng, Uniform(0.1, 1.0)),
+                                rand(rng, Uniform(0.1, 1.0))
+                            ]
+                            grad_AD = ForwardDiff.gradient(compute_logpdf, θ)
+                            grad_num = FiniteDiff.finite_difference_gradient(compute_logpdf, θ)
+                            if isapprox(grad_AD, grad_num, norm=x->maximum(abs.(x)))
+                                @test true
+                            elseif isapprox(grad_AD, grad_num, norm=x->maximum(abs.(x)), atol=1e-5)
+                                @info k1
+                                @info k2
+                                @info "Grad matches with atol=1e-5"
+                                @test true
+                            else
+                                @info k1
+                                @info k2
+                                @info maximum(abs.(grad_AD .- grad_num))
+                                @test isapprox(grad_AD, grad_num, norm=x->maximum(abs.(x)))
+                            end
+                        end
+                    end
 
                     # Report benchmarks
                     #=@info k_kron.kernels covariance
