@@ -1,7 +1,7 @@
 name = "KroneckerProductKernels"
 uuid = "cdbd8a54-2c11-4475-85dd-323d022ca3c3"
-authors = ["Zach Langford <langfzac@sas.upenn.edu> and contributors"]
 version = "0.0.2"
+authors = ["Zach Langford <langfzac@sas.upenn.edu> and contributors"]
 
 [deps]
 AbstractGPs = "99985d1d-32ba-4be9-9821-2ec096f28918"
@@ -14,6 +14,6 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 [compat]
 AbstractGPs = "0.5"
 Distributions = "0.25"
-KernelFunctions = "0.10"
+KernelFunctions = "0.10, 0.11"
 Kronecker = "0.5"
 julia = "1.6.7"
