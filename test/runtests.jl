@@ -3,6 +3,7 @@ using Test, BenchmarkTools, Random
 using KernelFunctions: TestUtils
 using KroneckerProductKernels: make_test_inputs
 using Kronecker: ⊗, Diagonal
+using ForwardDiff, FiniteDiff
 
 @testset "KroneckerProductKernels.jl" begin
     include("test_kernel.jl")
