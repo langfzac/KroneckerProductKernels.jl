@@ -1,6 +1,6 @@
 name = "KroneckerProductKernels"
 uuid = "cdbd8a54-2c11-4475-85dd-323d022ca3c3"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Zach Langford <langfzac@sas.upenn.edu> and contributors"]
 
 [deps]
