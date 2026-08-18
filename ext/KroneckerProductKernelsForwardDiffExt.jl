@@ -62,6 +62,65 @@ module KroneckerProductKernelsForwardDiffExt
         return Dual{T}(logpdf_val, Partials(grads))
     end
 
+    # And for the Diagonal covariance
+    function KroneckerProductKernels._logpdf(
+        f::KroneckerProductKernels.DiagonalVarKroneckerFiniteGP, 
+        Y::AbstractVecOrMat{<:Real}, 
+        K::Kronecker.KroneckerProduct{D}
+        ) where D <: Dual
+        T = ForwardDiff.tagtype(D)
+        Np = ForwardDiff.npartials(D)
+        NM = size(Y,1)
+
+        # Extract the primals for the covariance matrix
+        Σ1 = value(f.Σy.A); Σ1m = inv(sqrt(Σ1))
+        Σ2 = value(f.Σy.B); Σ2m = inv(sqrt(Σ2))
+        Σm = Σ1m ⊗ Σ2m
+
+        # Extract primals for the Kronecker matrices
+        K1 = value.(K.A)
+        K2 = value.(K.B)
+        K̃1 = Σ1m * K1 * Σ1m
+        K̃2 = Σ2m * K2 * Σ2m
+
+        # Get the kronecker product matrix and compute the eigen decomposition of the components
+        E1 = eigen(Symmetric(K̃1)); Q1 = E1.vectors; Λ1 = Diagonal(E1.values)
+        E2 = eigen(Symmetric(K̃2)); Q2 = E2.vectors; Λ2 = Diagonal(E2.values)
+
+        # Get the K^-1 * Y
+        # Uses the "vec trick"
+        Λ = (Λ1 ⊗ Λ2) + I
+        invΛ = inv(Λ)
+        Q = (Q1 ⊗ Q2)
+        Qt = Q'
+        invKY = Σm * Q * (invΛ * Qt * Σm * Y)
+        invKYt = invKY'
+
+        # logpdf primal
+        Σy = value(f.Σy)
+        logdetK = sum([log(Λ.diag[i]) + log(Σy[i,i]) for i in 1:NM])
+        logpdf_val = -0.5 * (Y'invKY + logdetK + NM*log(2π))
+
+        # Common matrices
+        W1 = Σ1m * Q1
+        W2 = Σ2m * Q2
+
+        # Compute gradients for each partial
+        grads = ntuple(Val(Np)) do i 
+            dK1 = partials.(K.A, i)
+            dK2 = partials.(K.B, i)
+
+            # Compute the quadratic term 
+            quad = invKYt * ((dK1 ⊗ K2) * invKY) + invKYt * ((K1 ⊗ dK2) * invKY)
+            
+            # Now the log determinant term
+            dlogdetK = dot(diag(invΛ), (diag(W1' * dK1 * W1) ⊗ diag(W2' * K2 * W2))) + dot(diag(invΛ), (diag(W1' * K1 * W1) ⊗ diag(W2' * dK2 * W2)))
+
+            0.5 * (quad - dlogdetK)
+        end
+        return Dual{T}(logpdf_val, Partials(grads))
+    end
+
     ###
     # Case with just Y gradient, let AD just do it. It's simple and not numerically unstable.
     ###
@@ -125,6 +184,75 @@ module KroneckerProductKernelsForwardDiffExt
                 quad += dot(invKYt, invKY) * dΣ
                 dlogdetK += tr(invΛ) * dΣ
             end
+
+            0.5 * (quad - dlogdetK) - dot(invKY, dY)
+        end
+        return Dual{T}(logpdf_val, Partials(grads))
+    end
+
+    # And for the Diagonal covariance
+    function KroneckerProductKernels._logpdf(
+        f::KroneckerProductKernels.DiagonalVarKroneckerFiniteGP, 
+        Y::AbstractVecOrMat{D1}, 
+        K::Kronecker.KroneckerProduct{D2}
+        ) where {D1 <: Dual, D2 <: Dual}
+        T1 = ForwardDiff.tagtype(D1)
+        T2 = ForwardDiff.tagtype(D2)
+        @assert T1 === T2 "Y and K have different tag types!"
+        T = T1
+
+        Np1 = ForwardDiff.npartials(D1)
+        Np2 = ForwardDiff.npartials(D2)
+        @assert Np1 == Np2 "Y and K need to have the same number of partials"
+        Np = Np1
+
+        Y_val = value.(Y)
+        NM = size(Y_val,1)
+
+        # Extract the primals for the covariance matrix
+        Σ1 = value.(f.Σy.A); Σ1m = inv(sqrt(Σ1))
+        Σ2 = value.(f.Σy.B); Σ2m = inv(sqrt(Σ2))
+        Σm = Σ1m ⊗ Σ2m
+
+        # Extract primals for the Kronecker matrices
+        K1 = value.(K.A)
+        K2 = value.(K.B)
+        K̃1 = Σ1m * K1 * Σ1m
+        K̃2 = Σ2m * K2 * Σ2m
+
+        # Get the kronecker product matrix and compute the eigen decomposition of the components
+        E1 = eigen(Symmetric(K̃1)); Q1 = E1.vectors; Λ1 = Diagonal(E1.values)
+        E2 = eigen(Symmetric(K̃2)); Q2 = E2.vectors; Λ2 = Diagonal(E2.values)
+
+        # Get the K^-1 * Y
+        # Uses the "vec trick"
+        Λ = (Λ1 ⊗ Λ2) + I
+        invΛ = inv(Λ)
+        Q = (Q1 ⊗ Q2)
+        Qt = Q'
+        invKY = Σm * Q * (invΛ * Qt * Σm * Y_val)
+        invKYt = invKY'
+
+        # logpdf primal
+        Σy = value(f.Σy)
+        logdetK = sum([log(Λ.diag[i]) + log(Σy[i,i]) for i in 1:NM])
+        logpdf_val = -0.5 * (Y_val'invKY + logdetK + NM*log(2π))
+
+        # Common matrices
+        W1 = Σ1m * Q1
+        W2 = Σ2m * Q2
+
+        # Compute gradients for each partial
+        grads = ntuple(Val(Np)) do i 
+            dK1 = partials.(K.A, i)
+            dK2 = partials.(K.B, i)
+            dY = partials.(Y, i)
+
+            # Compute the quadratic term w.r.t. K
+            quad = invKYt * ((dK1 ⊗ K2) * invKY) + invKYt * ((K1 ⊗ dK2) * invKY)
+            
+            # Now the log determinant term
+            dlogdetK = dot(diag(invΛ), (diag(W1' * dK1 * W1) ⊗ diag(W2' * K2 * W2))) + dot(diag(invΛ), (diag(W1' * K1 * W1) ⊗ diag(W2' * dK2 * W2)))
 
             0.5 * (quad - dlogdetK) - dot(invKY, dY)
         end
